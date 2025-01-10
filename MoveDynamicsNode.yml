@@ -1,0 +1,20 @@
+# Movendo um node do Dynamics
+- hosts: "{{ servidor }}"
+  gather_facts: no
+  vars:
+    ansible_user: svc-ansibleprd@<domain>
+    ansible_connection: winrm
+    ansible_port: 5985
+    ansible_winrm_transport: kerberos
+    ansible_winrm_server_cert_validation: ignore
+
+  tasks:
+  - name: Reiniciando Coordninator
+    win_shell: 'restart-service "AppDynamics.Agent.Coordinator_Service"'
+    register: result_shell
+  - debug: var=result_shell
+  
+  - name: Reiniciando a Pool
+    win_shell: 'Restart-WebAppPool -Name "{{ apppool }}"'
+    register: result_shell
+  - debug: var=result_shell

@@ -1,0 +1,16 @@
+# Pegando padrão em um arquivo
+- hosts: "{{ servidor }}"
+  gather_facts: no
+  vars:
+    ansible_user: svc-ansiblehom@<domain>
+    ansible_connection: winrm
+    ansible_port: 5985
+    ansible_winrm_transport: kerberos
+    ansible_winrm_server_cert_validation: ignore
+    app_path: "{{ arquivo }}"
+
+  tasks:
+  - name: Verificando versão
+    win_shell: 'Select-String -Path  "{{ app_path }}"  -Pattern  "{{ padrao }}"  -AllMatches | % { $_.Matches } | % { $_.Value }'
+    register: result_shell
+  - debug: var=result_shell

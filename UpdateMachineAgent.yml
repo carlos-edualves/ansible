@@ -1,0 +1,27 @@
+- hosts: "{{ servidor }}"
+  gather_facts: no
+  vars:
+    ansible_user: svc-ansiblehom@<domain>
+    ansible_connection: winrm
+    ansible_port: 5985
+    ansible_winrm_transport: kerberos
+    ansible_winrm_server_cert_validation: ignore
+  tasks:
+    - name: Copiando Agent
+      win_copy:
+        src: /etc/ansible/windows/repositorios/MachineAgent/MachineAgent.zip
+        dest: C:\Temp\
+
+    - name: Fazendo backup do controller
+      win_shell: 'Copy-Item -Path "D:\AppDynamics\Machine Agent\conf\controller-info.xml" -Destination "C:\temp"'
+
+    - name: Copiando Script
+      win_copy:
+        src: /etc/ansible/windows/repositorios/windows/UpgradeMachineAgentHOM.ps1
+        dest: C:\Temp\
+    - name: Rodando Script
+      win_shell: 'C:\Temp\UpgradeMachineAgentHOM.ps1'
+      register: result_copia
+    - debug: var=result_copia
+
+      

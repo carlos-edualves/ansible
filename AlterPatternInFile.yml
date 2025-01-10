@@ -1,0 +1,29 @@
+#Encontra uma string em um arquivo e substitui a mesma pela string selecionada
+#variaveis, servidor, arquivo, oldpattern e newpattern
+- hosts: "{{ servidor }}"
+  gather_facts: no
+  vars:
+    ansible_user: svc-ansiblehom@<domain>
+    ansible_connection: winrm
+    ansible_port: 5985
+    ansible_winrm_transport: kerberos
+    ansible_winrm_server_cert_validation: ignore
+
+  tasks:
+  - name: Pegando padrão atual
+    win_shell: 'write-host "padrao antigo: " ; Select-String -Path "{{ arquivo }}" -Pattern "{{ oldpattern }}" -AllMatches | % { $_.Matches }
+ | % { $_.Value }'
+    register: resultantiga
+  - name: Alterando chave atual
+    win_shell: '(Get-Content "{{ arquivo }}" -Raw) -replace  "{{ oldpattern }}","{{ newpattern }}" | Set-Content "{{ arquivo }}"'
+  - name: Pegando padrão alterado
+    win_shell: 'write-host "novo padrao: " ; Select-String -Path "{{ arquivo }}" -Pattern "{{ newpattern }}" -AllMatches | % { $_.Matches } |
+ % { $_.Value }'
+    register: resultnova
+  - name: Reiniciando o serviço
+    win_shell: 'restart-service -Name "Appdynamics Machine Agent"'
+    
+  - debug:
+      var: resultantiga
+  - debug:
+      var: resultnova

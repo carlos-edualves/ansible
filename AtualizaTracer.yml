@@ -1,0 +1,18 @@
+- hosts: "{{ servidor }}"
+  gather_facts: no
+  vars:
+    ansible_user: svc-ansiblehom@<domain>
+    ansible_connection: winrm
+    ansible_port: 5985
+    ansible_winrm_transport: kerberos
+    ansible_winrm_server_cert_validation: ignore
+  tasks:
+    - name: Desinstalando
+      win_shell: 'Uninstall-Package -Name "Datadog .NET Tracer 64-bit" -Force'
+      register: result_copia
+
+    - name: instalando novo tracer
+      win_shell: 'Start-Process -Wait msiexec -ArgumentList "/qn /i \\<domain>\dfs\Install\AppDynamics\TracerNew\datadog-dotnet-apm.msi"'
+      register: result_copia
+    
+    - debug: var=result_copia.stdout_lines

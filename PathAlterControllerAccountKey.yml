@@ -1,0 +1,30 @@
+# Alterando chave de acesso do controller
+- hosts: "{{ servidor }}"
+  gather_facts: no
+  vars:
+    ansible_user: svc-ansibleprd@<domain>
+    ansible_connection: winrm
+    ansible_port: 5985
+    ansible_winrm_transport: kerberos
+    ansible_winrm_server_cert_validation: ignore
+
+  tasks:
+  - name: pegando as chaves antigas do machine agent e agent coordinator
+    win_shell: 'write-host "chave antiga agent: " -nonewline ; Select-String -Path "{{ arquivo }}" -Pattern "(?<=<account-access-key>)(.*)(?=<.account-access-key>)" -AllMatches | % { $_.Matches } | % { $_.Value } ; write-host "chave antiga Coordinator: " -nonewline ; Select-String -Path "C:\ProgramData\AppDynamics\DotNetAgent\Config\config.xml" -Pattern "(?<=password=.).*(?=...>)" -AllMatches | % { $_.Matches } | % { $_.Value }'
+    register: resultantiga
+  - name: Alterando a chave do machine agent
+    win_shell: '(Get-Content "{{ arquivo }}" -Raw) -replace  "(?<=<account-access-key>)(.*)(?=<.account-access-key>)","{{ chave }}" | Set-Content "{{ arquivo }}"'
+  - name: alterando a chave do agent coordinator
+    win_shell: '(Get-Content "C:\ProgramData\AppDynamics\DotNetAgent\Config\config.xml" -Raw) -replace  "(?<=password=.).*(?=...>)","{{ chave }}" | Set-Content "C:\ProgramData\AppDynamics\DotNetAgent\Config\config.xml"'
+  - name: pegando chave nova do machine agent e coordinator
+    win_shell: 'write-host "chave nova agent: " -nonewline ; Select-String -Path "{{ arquivo }}" -Pattern "(?<=<account-access-key>)(.*)(?=<.account-access-key>)" -AllMatches | % { $_.Matches } | % { $_.Value } ; write-host "chave nova Coordinator: " -nonewline ; Select-String -Path "C:\ProgramData\AppDynamics\DotNetAgent\Config\config.xml" -Pattern "(?<=password=.).*(?=....)" -AllMatches | % { $_.Matches } | % { $_.Value }'
+    register: resultnova
+  - name: Reiniciando o serviço do Appdybnamics Machine Agent
+    win_shell: 'restart-service -Name "Appdynamics Machine Agent"'
+  - name: Reiniciando o serviço do Appdynamics Agent coordinator
+    win_shell: 'restart-service -Name "AppDynamics.Agent.Coordinator_service"'  
+  
+  - debug:
+      var: resultantiga.stdout_lines
+  - debug:
+      var: resultnova.stdout_lines

@@ -1,0 +1,19 @@
+- hosts: "{{ servidor }}"
+  gather_facts: no
+  vars:
+    ansible_user: svc-ansibleprd@<domain>
+    ansible_connection: winrm
+    ansible_port: 5985
+    ansible_winrm_transport: kerberos
+    ansible_winrm_server_cert_validation: ignore
+
+  tasks:
+    - name: Copiando script
+      win_copy:
+        src: /etc/ansible/windows/repositorios/iis/GetMemoryWSCService.ps1
+        dest: C:\Temp\
+
+    - name: executando script
+      win_shell: 'C:\Temp\GetMemoryWSCService.ps1'
+      register: result_copia
+    - debug: var=result_copia

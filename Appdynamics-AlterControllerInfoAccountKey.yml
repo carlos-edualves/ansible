@@ -1,0 +1,27 @@
+# Alterando chave de acesso do controller
+- hosts: "{{ servidor }}"
+  gather_facts: no
+  vars:
+    ansible_user: svc-ansiblehom@<domain>
+    ansible_connection: winrm
+    ansible_port: 5985
+    ansible_winrm_transport: kerberos
+    ansible_winrm_server_cert_validation: ignore
+
+  tasks:
+  - name: pegando chave antiga
+    win_shell: 'write-host "chave antiga:" ; Select-String -Path "D:\AppDynamics\MachineAgent\conf\controller-info.xml" -Pattern "(?<=<account-access-key>)(.*)(?=<.account-access-key>)" -AllMatches | % { $_.Matches }
+ | % { $_.Value }'
+    register: resultantiga
+  - name: Alterando chave atual
+    win_shell: '(Get-Content "D:\AppDynamics\MachineAgent\conf\controller-info.xml" -Raw) -replace  "(?<=<account-access-key>)(.*)(?=<.account-access-key>)","{{ chave }}" | Set-Content "D:\AppDynamics\MachineAgent\conf\controller-info.xml"'
+  - name: pegando chave atualizada
+    win_shell: 'write-host "chave nova:" ; Select-String -Path "D:\AppDynamics\MachineAgent\conf\controller-info.xml" -Pattern "(?<=<account-access-key>)(.*)(?=<.account-access-key>)" -AllMatches | % { $_.Matches } |
+ % { $_.Value }'
+    register: resultnova
+  - name: Reiniciando o serviço
+    win_shell: 'restart-service -Name "Appdynamics Machine Agent"'
+  - debug:
+      var: resultantiga.stdout_lines
+  - debug:
+      var: resultnova.stdout_lines

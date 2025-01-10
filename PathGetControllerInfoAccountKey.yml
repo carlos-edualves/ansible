@@ -1,0 +1,19 @@
+# Pegando informações do controller e chave de acesso
+- hosts: "{{ servidor }}"
+  gather_facts: no
+  vars:
+    ansible_user: svc-ansibleprd@<domain>
+    ansible_connection: winrm
+    ansible_port: 5985
+    ansible_winrm_transport: kerberos
+    ansible_winrm_server_cert_validation: ignore
+
+  tasks:
+  - name: coletando licença machine agent
+    win_shell: ' Write-Host $env:Computername ; write-host "chave instalada no Machine Agent: " ; Select-String -Path "{{ caminho }}" -Pattern "(?<=<account-access-key>)(.*)(?=<.account-access-key>)" -AllMatches | % { $_.Matches } | % { $_.Value }'
+    register: result_shell
+  - name: coletando licença .Net Agent
+    win_shell: 'Select-String -Path "C:\ProgramData\AppDynamics\DotNetAgent\Config\config.xml" -Pattern "(?<=password=").*(?=")" -AllMatches | % { $_.Matches } | % { $_.Value }'
+    register: result_shell2
+  - debug: var=result_shell.stdout_lines
+  - debug: var=result_shell2.stdout_lines

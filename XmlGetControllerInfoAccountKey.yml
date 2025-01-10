@@ -1,0 +1,15 @@
+# Pegando chave de acesso do controller
+- hosts: "{{ servidor }}"
+  gather_facts: no
+  vars:
+    ansible_user: svc-ansibleprd@<domain>
+    ansible_connection: winrm
+    ansible_port: 5985
+    ansible_winrm_transport: kerberos
+    ansible_winrm_server_cert_validation: ignore
+
+  tasks:
+  - name: Verificando versão
+    win_shell: 'Select-Xml -Path "D:\AppDynamics\MachineAgent\conf\controller-info.xml" -XPath "controller-info/account-access-key" | Select-Object -ExpandProperty Node'
+    register: result_shell
+  - debug: var=result_shell

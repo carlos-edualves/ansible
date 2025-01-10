@@ -1,0 +1,18 @@
+# Pegando versão do Machine Agent
+- hosts: "{{ servidor }}"
+  gather_facts: no
+  vars:
+    ansible_user: svc-ansibleprd@<domain>
+    ansible_connection: winrm
+    ansible_port: 5985
+    ansible_winrm_transport: kerberos
+    ansible_winrm_server_cert_validation: ignore
+
+  tasks:
+  - name: Verificando versão
+    win_shell: '$env:COMPUTERNAME ; get-content D:\AppDynamics\MachineAgent\monitors\analytics-agent\version.txt | Select-String -Pattern "version" ; Write-Output "-------"'
+    register: result_shell
+   
+  - debug: var=result_shell
+
+  

@@ -1,0 +1,15 @@
+# Pegando informações do controller e chave de acesso
+- hosts: "{{ servidor }}"
+  gather_facts: no
+  vars:
+    ansible_user: svc-ansibleprd@<domain>
+    ansible_connection: winrm
+    ansible_port: 5985
+    ansible_winrm_transport: kerberos
+    ansible_winrm_server_cert_validation: ignore
+
+  tasks:
+  - name: Verificando versão
+    win_shell: 'write-host "Chave instalada: " ; Select-String -Path "D:\AppDynamics\MachineAgent\conf\controller-info.xml" -Pattern "(?<=<account-access-key>)(.*)(?=<.account-access-key>)" -AllMatches | % { $_.Matches } | % { $_.Value }'
+    register: result_shell
+  - debug: var=result_shell

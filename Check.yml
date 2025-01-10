@@ -1,0 +1,14 @@
+# Checando se o arquivo existe
+- hosts: "{{ servidor }}"
+  gather_facts: no
+  vars:
+    ansible_user: svc-ansibleprd@<domain>
+    ansible_connection: winrm
+    ansible_port: 5985
+    ansible_winrm_transport: kerberos
+    ansible_winrm_server_cert_validation: ignore
+  tasks:
+    - name: Checando arquivo
+      win_shell: 'write-host $env:computername ; test-path "C:\ProgramData\AppDynamics\DotNetAgent\Config"'
+      register: result_copia
+    - debug: var=result_copia

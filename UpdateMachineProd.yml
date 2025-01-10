@@ -1,0 +1,37 @@
+# Atualizando o Machine Agent
+- hosts: "{{ servidor }}"
+  gather_facts: no
+  serial: 5
+  strategy: free
+  become: yes
+  become_method: runas
+  vars:
+    ansible_user: svc-ansibleprd@<domain>
+    ansible_connection: winrm
+    ansible_port: 5985
+    ansible_winrm_transport: kerberos
+    ansible_winrm_server_cert_validation: ignore
+    ansible_become_user: svc-ansibleprd@<domain>
+    ansible_become_pass: "{{ adm_password }}"
+  tasks:
+    - name: Criando diretorio Temp
+      win_file:
+        path: C:\Temp\
+        state: directory
+
+    - name: Copiando Agent
+      win_copy:
+        src: \\<domain>\dfs\Install\IAC\AppDynamics\MachineAgent.zip
+        dest: C:\Temp\
+        remote_src: yes
+
+    - name: Copiando Script
+      win_copy:
+        src: /etc/ansible/windows/repositorios/windows/UpdateMachine.ps1
+        dest: C:\Temp\
+
+    - name: Rodando Script
+      win_shell: 'C:\Temp\UpdateMachine.ps1'
+      register: result_copia
+
+    - debug: var=result_copia
